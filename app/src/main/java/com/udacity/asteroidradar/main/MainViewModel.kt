@@ -9,6 +9,7 @@ import com.udacity.asteroidradar.Asteroid
 import com.udacity.asteroidradar.Constants
 import com.udacity.asteroidradar.PictureOfDay
 import com.udacity.asteroidradar.api.AsteroidApi
+import com.udacity.asteroidradar.api.AsteroidApiFilter
 import com.udacity.asteroidradar.database.getDatabase
 import com.udacity.asteroidradar.repository.AsteroidsRepository
 import kotlinx.coroutines.launch
@@ -45,7 +46,7 @@ class MainViewModel(
     private fun getData() {
         viewModelScope.launch {
             try {
-                repository.refreshAsteroids()
+                repository.refreshAsteroids(asteroidType = AsteroidApiFilter.SHOW_ALL)
             } catch (e: Exception) {
                 // TODO
             }
@@ -68,5 +69,15 @@ class MainViewModel(
 
     fun displayPropertyDetailsComplete() {
         _navigateToSelectedProperty.value = null
+    }
+
+    fun updateFilter(filter: AsteroidApiFilter) {
+        viewModelScope.launch {
+            try {
+                repository.refreshAsteroids(asteroidType = filter)
+            } catch (e: Exception) {
+                // TODO
+            }
+        }
     }
 }

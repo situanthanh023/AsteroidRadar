@@ -1,10 +1,12 @@
 package com.udacity.asteroidradar.repository
 
+import android.annotation.SuppressLint
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.map
 import com.udacity.asteroidradar.Asteroid
 import com.udacity.asteroidradar.Constants.API_KEY
 import com.udacity.asteroidradar.api.AsteroidApi
+import com.udacity.asteroidradar.api.AsteroidApiFilter
 import com.udacity.asteroidradar.api.parseAsteroidsJsonResult
 import com.udacity.asteroidradar.database.AsteroidsDatabase
 import com.udacity.asteroidradar.database.asAsteroidEntities
@@ -15,19 +17,24 @@ import org.json.JSONObject
 
 class AsteroidsRepository(private val database: AsteroidsDatabase) {
 
-    val asteroids: LiveData<List<Asteroid>> =
-        database.asteroidDao.getAsteroids().map {
-            it.asAsteroids()
-        }
+    val asteroids: LiveData<List<Asteroid>> = database.asteroidDao.getAsteroids().map {
+        it.asAsteroids()
+    }
 
-    suspend fun refreshAsteroids() {
+    @SuppressLint("WeekBasedYear")
+    suspend fun refreshAsteroids(asteroidType: AsteroidApiFilter) {
         withContext(Dispatchers.IO) {
-            val asteroids = parseAsteroidsJsonResult(
-                JSONObject(
-                    AsteroidApi.retrofitService.getProperties("", "", API_KEY)
+            if (AsteroidApiFilter.SHOW_TODAY == asteroidType || AsteroidApiFilter.SHOW_ALL == asteroidType) {
+                val asteroids = parseAsteroidsJsonResult(
+                    JSONObject(
+                        AsteroidApi.retrofitService.getProperties(
+                            "", asteroidType.type, API_KEY
+                        )
+                    )
                 )
-            )
-            database.asteroidDao.insertAll(asteroids.asAsteroidEntities())
+                database.asteroidDao.clear()
+                database.asteroidDao.insertAll(asteroids.asAsteroidEntities())
+            }
         }
     }
 }
