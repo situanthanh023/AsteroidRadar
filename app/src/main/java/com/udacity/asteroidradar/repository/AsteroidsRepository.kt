@@ -34,6 +34,15 @@ class AsteroidsRepository(private val database: AsteroidsDatabase) {
                 )
                 database.asteroidDao.clear()
                 database.asteroidDao.insertAll(asteroids.asAsteroidEntities())
+            } else {
+                val asteroids = parseAsteroidsJsonResult(
+                    JSONObject(
+                        AsteroidApi.retrofitService.getProperties(
+                            "", asteroidType.type, API_KEY
+                        )
+                    )
+                )
+                database.asteroidDao.insertAll(asteroids.asAsteroidEntities())
             }
         }
     }
